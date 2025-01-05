@@ -1,93 +1,79 @@
 package org.example;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.javalin.Javalin;
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
-    public void initializeServer(int port) {
+    private static final String BASE_FILE_URL = "src/main/resources";
 
-        try (
-            ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server is running on port " + port);
+    private List<String> words = new ArrayList<>();
 
-            while (true) {
-                try (Socket clientSocket = serverSocket.accept()) {
-                    handleClient(clientSocket);
+    public  void initializeServer(int port) {
+        Javalin app = Javalin.create().start(port);
+
+        app.get("/*", ctx -> {
+            File file = new File(BASE_FILE_URL +"/frontend"+ ctx.path());
+            if (file.exists()) {
+                try {
+                    byte[] fileBytes = Files.readAllBytes(file.toPath()); // Читаем содержимое файла в байты
+                    ctx.result(fileBytes);  // Отдаем байтовый массив
+                    if(file.getName().endsWith(".css")) {
+                        ctx.contentType("text/css"); // Указываем тип содержимого, если это CSS файл
+                    }
+                    if(file.getName().endsWith(".js")) {
+                        ctx.contentType("text/javascript"); // Указываем тип содержимого, если это JS файл
+                    }
+                    if(file.getName().endsWith(".html")) {
+                        ctx.contentType("text/html"); // Указываем тип содержимого, если это HTML файл
+                    }
+                    if(file.getName().endsWith(".json")) {
+                        ctx.contentType("application/json");
+                    }
+//                    ctx.contentType("text/html"); // Указываем тип содержимого, если это HTML файл
                 } catch (IOException e) {
-                    System.err.println("Error handling client: " + e.getMessage());
+                    ctx.status(500).result("Error reading file");
                 }
-            }
-        } catch (IOException e) {
-            System.err.println("Server error: " + e.getMessage());
-        }
-    }
-        private static void handleClient(Socket clientSocket) throws IOException {
-            InputStream input = clientSocket.getInputStream();
-            OutputStream output = clientSocket.getOutputStream();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8), true);
-
-            // Читаем запрос
-            String requestLine = reader.readLine();
-            if (requestLine == null || requestLine.isEmpty()) {
-                return;
-            }
-            System.out.println("Request: " + requestLine);
-
-            // Парсим метод и путь
-            String[] parts = requestLine.split(" ");
-            if (parts.length < 2) {
-                sendResponse(writer, 400, "Bad Request");
-                return;
-            }
-
-            String method = parts[0];
-            String path = parts[1];
-
-            // Обработка запросов
-            if (method.equals("GET")) {
-                handleGet(path, writer);
-            } else if (method.equals("POST")) {
-                handlePost(reader, writer);
             } else {
-                sendResponse(writer, 405, "Method Not Allowed");
+                ctx.status(404).result("File not found");
             }
+        });
 
-            clientSocket.close();
-        }
+        app.post("/translate/new", ctx -> {
+            String requestBody = ctx.body();
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                // Преобразуем JSON строку в JsonNode
+                JsonNode jsonNode = objectMapper.readTree(requestBody);
 
-        private static void handleGet(String path, PrintWriter writer) {
-            String response = "You requested GET " + path;
-            sendResponse(writer, 200, response);
-        }
-
-        private static void handlePost(BufferedReader reader, PrintWriter writer) throws IOException {
-            StringBuilder body = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                body.append(line).append("\n");
+                // Извлекаем значение из поля "translatedText"
+                String translatedText = jsonNode.get("translatedText").asText();
+                words.add(translatedText);
+                ctx.result(translatedText);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.status(400).result("Invalid JSON format");
             }
+        });
 
-            String response = "You sent POST with body:\n" + body;
-            sendResponse(writer, 200, response);
-        }
+        app.post("/words", ctx -> {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                //1. запрос в базу данных для получения непоказанных слов
+//2. сделать эти слова покказанными
+                //3. вернуть слова в формате json
+                String json = objectMapper.writeValueAsString(words);
+                ctx.result(json);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
-        private static void sendResponse(PrintWriter writer, int statusCode, String response) {
-            writer.println("HTTP/1.1 " + statusCode + " OK");
-            writer.println("Content-Type: text/plain; charset=UTF-8");
-            writer.println("Content-Length: " + response.getBytes(StandardCharsets.UTF_8).length);
-            writer.println();
-            writer.print(response);
-        }
-
+    }
 
 }
