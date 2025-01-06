@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import org.example.model.Word;
+import org.example.repository.WordRepository;
 
 import java.io.*;
 import java.nio.file.*;
@@ -12,8 +13,7 @@ import java.util.List;
 
 public class Server {
     private static final String BASE_FILE_URL = "src/main/resources";
-
-    private Word lastWord = null;
+    private final WordRepository wordRepository = new WordRepository();
 
     public  void initializeServer(int port) {
         Javalin app = Javalin.create().start(port);
@@ -50,12 +50,10 @@ public class Server {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
 
-                System.out.println(requestBody);
                 Word word = objectMapper.treeToValue((objectMapper.readTree(requestBody)), Word.class);
 
+                wordRepository.saveOrUpdate(word);
 
-//TODO REMOVE
-                lastWord =word;
                 ctx.result(String.valueOf(word));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -66,10 +64,14 @@ public class Server {
         app.post("/words", ctx -> {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                //1. запрос в базу данных для получения непоказанных слов
-//2. сделать эти слова покказанными
-                //3. вернуть слова в формате json
-                String json = objectMapper.writeValueAsString(lastWord);
+                Word unshownWord = wordRepository.getUnshown();
+                if(unshownWord == null) {
+                    String json = objectMapper.writeValueAsString(null);
+                    ctx.result(json);
+                    return;
+                }
+                wordRepository.updateShown(unshownWord.getId());
+                String json = objectMapper.writeValueAsString(unshownWord);
                 ctx.result(json);
             } catch (Exception e) {
                 e.printStackTrace();

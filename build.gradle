@@ -16,6 +16,8 @@ dependencies {
     implementation("io.javalin:javalin:6.4.0")
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.0.1'
+    implementation 'com.h2database:h2:2.2.222'
+
 }
 
 test {

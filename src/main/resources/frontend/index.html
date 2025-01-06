@@ -14,36 +14,41 @@
 <button id="notifications"> Показать уведомление</button>
 
 <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then((registration) => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch((error) => {
-            console.log('Service Worker registration failed:', error);
-          });
-      });
-    }
+    // Проверка, поддерживает ли браузер Background Sync
+ if ('serviceWorker' in navigator) {
+   window.addEventListener('load', () => {
+     navigator.serviceWorker.register('./service-worker.js')
+       .then((registration) => {
+         console.log('Service Worker зарегистрирован с областью:', registration.scope);
 
-    const button = document.getElementById("notifications");
-button.addEventListener("click", () => {
-  Notification.requestPermission().then((result) => {
-    if (result === "granted") {
-      randomNotification();
-    }
-  });
-});
+         // После регистрации сервис-воркера, запускаем Background Sync
+         registerSync();
+       })
+       .catch((error) => {
+         console.log('Ошибка регистрации сервис-воркера:', error);
+       });
+   });
+ }
 
-function randomNotification() {
-  const notifTitle = "Уведомление!";
-  const notifBody = "Created by ";
-  const options = {
-    body: notifBody,
-  };
-  new Notification(notifTitle, options);
-}
+ // Функция для регистрации синхронизации
+ function registerSync() {
+     navigator.serviceWorker.ready.then(swRegistration => {
+         return swRegistration.sync.register('fetch-data');
+     }).catch(err => {
+         console.error('Ошибка регистрации синхронизации:', err);
+     });
+ }
 
+ // Обработчик кнопки для запросов уведомлений
+ const button = document.getElementById("notifications");
+ button.addEventListener("click", () => {
+     Notification.requestPermission().then((result) => {
+         if (result === "granted") {
+             // Запускаем синхронизацию только при разрешении на уведомления
+             registerSync();
+         }
+     });
+ });
 
 </script>
 </body>

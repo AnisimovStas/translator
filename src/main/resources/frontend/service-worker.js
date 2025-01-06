@@ -1,5 +1,9 @@
-
-const interval = 1000;  // 1 секунда
+// Слушаем событие sync
+self.addEventListener('sync', event => {
+    if (event.tag === 'fetch-data') {
+        event.waitUntil(fetchData());
+    }
+});
 
 function fetchData() {
     // Проверка разрешения на уведомления
@@ -27,15 +31,13 @@ function fetchData() {
         .then(response => response.json())  // Предполагаем, что сервер вернет JSON
         .then(data => {
             // Обрабатываем полученные данные
-            if(data === null) return;
-             const notifTitle = `Добавлен перевод для слова: ${data.originalText}!`;
-                const notifBody = `${data.originalText} - ${data.translatedText}`;
-                const options = {
-                    body: notifBody,
-                }
-                self.registration.showNotification(notifTitle, {
-                    body: notifBody
-                });
+            if (data === null) return;
+
+            const notifTitle = `Добавлен перевод для слова: ${data.originalText}!`;
+            const notifBody = `${data.originalText} - ${data.translatedText}`;
+            self.registration.showNotification(notifTitle, {
+                body: notifBody
+            });
 
             console.log('Response data:', data);  // Логируем полученные данные
         })
@@ -44,5 +46,3 @@ function fetchData() {
         });
     }
 }
-// Запуск периодического запроса
-setInterval(fetchData, interval);
