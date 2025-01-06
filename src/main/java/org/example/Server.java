@@ -3,6 +3,7 @@ package org.example;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
+import org.example.model.Word;
 
 import java.io.*;
 import java.nio.file.*;
@@ -12,7 +13,7 @@ import java.util.List;
 public class Server {
     private static final String BASE_FILE_URL = "src/main/resources";
 
-    private List<String> words = new ArrayList<>();
+    private Word lastWord = null;
 
     public  void initializeServer(int port) {
         Javalin app = Javalin.create().start(port);
@@ -48,13 +49,14 @@ public class Server {
             String requestBody = ctx.body();
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                // Преобразуем JSON строку в JsonNode
-                JsonNode jsonNode = objectMapper.readTree(requestBody);
 
-                // Извлекаем значение из поля "translatedText"
-                String translatedText = jsonNode.get("translatedText").asText();
-                words.add(translatedText);
-                ctx.result(translatedText);
+                System.out.println(requestBody);
+                Word word = objectMapper.treeToValue((objectMapper.readTree(requestBody)), Word.class);
+
+
+//TODO REMOVE
+                lastWord =word;
+                ctx.result(String.valueOf(word));
             } catch (Exception e) {
                 e.printStackTrace();
                 ctx.status(400).result("Invalid JSON format");
@@ -67,7 +69,7 @@ public class Server {
                 //1. запрос в базу данных для получения непоказанных слов
 //2. сделать эти слова покказанными
                 //3. вернуть слова в формате json
-                String json = objectMapper.writeValueAsString(words);
+                String json = objectMapper.writeValueAsString(lastWord);
                 ctx.result(json);
             } catch (Exception e) {
                 e.printStackTrace();

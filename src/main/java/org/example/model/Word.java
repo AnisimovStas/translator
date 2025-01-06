@@ -1,9 +1,15 @@
 package org.example.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Word {
-private final String originalText;
-private final String translatedText;
-private final Boolean isShown;
+private  String originalText;
+private  String translatedText;
+    @JsonProperty("isShown")
+private  Boolean isShown;
+
+    public Word() {
+    }
 
     public Word(String originalText, String translatedText, Boolean isShown) {
         this.originalText = originalText;
@@ -19,7 +25,7 @@ private final Boolean isShown;
         return translatedText;
     }
 
-    public Boolean getShown() {
+    public Boolean isShown() {
         return isShown;
     }
 

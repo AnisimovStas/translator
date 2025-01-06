@@ -1,5 +1,5 @@
 
-const interval = 500;  // 0.5 секунд
+const interval = 1000;  // 1 секунда
 
 function fetchData() {
     // Проверка разрешения на уведомления
@@ -27,17 +27,16 @@ function fetchData() {
         .then(response => response.json())  // Предполагаем, что сервер вернет JSON
         .then(data => {
             // Обрабатываем полученные данные
-            data.forEach(word => {
-                const notifTitle = "Новый перевод!";
-                const notifBody = word;  // Текст уведомления (каждое слово)
+            if(data === null) return;
+             const notifTitle = `Добавлен перевод для слова: ${data.originalText}!`;
+                const notifBody = `${data.originalText} - ${data.translatedText}`;
                 const options = {
-                    body: notifBody,  // Текст в теле уведомления
-                };
-self.registration.showNotification(notifTitle, {
-    body: notifBody
-});
+                    body: notifBody,
+                }
+                self.registration.showNotification(notifTitle, {
+                    body: notifBody
+                });
 
-            });
             console.log('Response data:', data);  // Логируем полученные данные
         })
         .catch(error => {
