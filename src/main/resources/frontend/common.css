@@ -1,0 +1,83 @@
+   /* Убираем стандартные марджины и паддинги */
+    * {
+      font-family: 'Courier New', monospace; /* Шрифт моноширинный для кода */
+
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    header {
+    width:100%;
+    height: 60px;
+      background-color: green; /* Зеленый фон */
+      color: white; /* Белый текст */
+      display: flex;
+      justify-content: flex-end; /* Кнопки справа */
+      align-items: center; /* Выравнивание по вертикали */
+      padding: 10px 20px; /* Отступы */
+    }
+
+    .button-container {
+      display: flex;
+      gap: 10px; /* Расстояние между кнопками */
+    }
+
+    button {
+      background-color: white;
+      color: green;
+      border: 2px solid green;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s; /* Плавный переход для эффекта */
+    }
+
+    button:hover {
+      background-color: #4caf50; /* Темно-зеленый фон на ховер */
+      color: white; /* Белый текст на ховер */
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      border-color: #999;
+      cursor: not-allowed;
+    }
+
+.no-permission {
+position: absolute;
+background: white;
+width: 100vw;
+height: 100vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+.container {
+width:100vw;
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content: start;
+align-items:center;
+}
+
+.code {
+  background-color: #2d2d2d; /* Темный фон */
+  color: #f8f8f2; /* Светлый цвет текста */
+  padding: 10px; /* Отступы вокруг кода */
+  border-radius: 5px; /* Слегка скругленные углы */
+  overflow-x: auto; /* Горизонтальная прокрутка, если код длинный */
+  white-space: pre-wrap; /* Сохранение форматирования пробелов */
+  word-wrap: break-word; /* Перенос длинных слов */
+}
+
+.main {
+display:flex;
+height:calc(100vh - 60px);
+flex-direction:column;
+justify-content: center;
+align-items: center;
+}

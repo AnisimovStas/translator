@@ -1,13 +1,19 @@
-// Слушаем событие sync
 self.addEventListener('sync', event => {
     if (event.tag === 'fetch-data') {
         event.waitUntil(fetchData());
     }
 });
 
+const interval = 1000; // 1 секунда
+
+let isPermissionRequested = false;
+
 function fetchData() {
-    // Проверка разрешения на уведомления
-    if (Notification.permission !== 'granted') {
+    console.log("Fetching data...");
+
+    // Проверка разрешения на уведомления только один раз
+    if (Notification.permission !== 'granted' && !isPermissionRequested) {
+        isPermissionRequested = true;
         Notification.requestPermission().then(permission => {
             if (permission === 'granted') {
                 sendPostRequest();
@@ -15,7 +21,7 @@ function fetchData() {
                 console.log('Permission denied for notifications');
             }
         });
-    } else {
+    } else if (Notification.permission === 'granted') {
         sendPostRequest();
     }
 
@@ -30,7 +36,6 @@ function fetchData() {
         })
         .then(response => response.json())  // Предполагаем, что сервер вернет JSON
         .then(data => {
-            // Обрабатываем полученные данные
             if (data === null) return;
 
             const notifTitle = `Добавлен перевод для слова: ${data.originalText}!`;
@@ -45,4 +50,11 @@ function fetchData() {
             console.error('Error fetching data:', error);  // Логируем ошибку, если запрос не удался
         });
     }
+}
+
+// Если нужно периодически повторять запросы
+// Можно запустить setInterval только если вкладка открыта
+if (!self.intervalRunning) {
+    self.intervalRunning = true;
+    setInterval(fetchData, interval);
 }

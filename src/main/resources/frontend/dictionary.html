@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переводчик</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="button-container">
+            <button id="home">Главная</button>
+            <button disabled>Экзамен</button>
+        </div>
+    </header>
+    <main class="main">
+        <h1>Словарь</h1>
+        <div id="tableContainer">
+            <table>
+                <thead>
+                <tr>
+                    <th>Original Text</th>
+                    <th>Translation</th>
+                </tr>
+                </thead>
+                <tbody id="virtualTableBody">
+                <!-- Rows will be populated dynamically -->
+                </tbody>
+            </table>
+
+    </main>
+</div>
+
+<script>
+    document.getElementById("home").addEventListener("click", () => {
+    window.location.href = "index.html";});
+
+  document.addEventListener('DOMContentLoaded', async () => {
+            const tableContainer = document.getElementById('tableContainer');
+            const tableBody = document.getElementById('virtualTableBody');
+            let data = [];
+            const rowHeight = 40; // Approximate row height in pixels
+            const bufferSize = 20; // Number of extra rows to render above and below
+
+            async function fetchData() {
+                try {
+                    const response = await fetch('http://localhost:8085/translate/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                    renderVisibleRows();
+                } catch (error) {
+                    console.error('Error fetching translation data:', error);
+                }
+            }
+
+            function renderVisibleRows() {
+                const scrollTop = tableContainer.scrollTop;
+                const containerHeight = tableContainer.clientHeight;
+                const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferSize);
+                const endIndex = Math.min(data.length, Math.ceil((scrollTop + containerHeight) / rowHeight) + bufferSize);
+
+                tableBody.innerHTML = '';
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    const row = data[i];
+                    const tr = document.createElement('tr');
+
+                    const originalTextCell = document.createElement('td');
+                    originalTextCell.textContent = row.originalText;
+                    tr.appendChild(originalTextCell);
+
+                    const translatedTextCell = document.createElement('td');
+                    translatedTextCell.textContent = row.isShown ? row.translatedText : 'Hidden';
+                    if (!row.isShown) {
+                        translatedTextCell.classList.add('hidden');
+                    }
+                    tr.appendChild(translatedTextCell);
+
+                    tableBody.appendChild(tr);
+                }
+            }
+
+            tableContainer.addEventListener('scroll', renderVisibleRows);
+
+            await fetchData();
+        });
+</script>
+
+
+</body>
+<style>
+     #tableContainer {
+         height: 400px;
+         overflow-y: auto;
+         border: 1px solid #ddd;
+     }
+     table {
+         width: 100%;
+         border-collapse: collapse;
+     }
+     th, td {
+         border: 1px solid #ddd;
+         padding: 8px;
+         text-align: left;
+     }
+     th {
+         background-color: #f4f4f4;
+         position: sticky;
+         top: 0;
+         z-index: 1;
+     }
+     .hidden {
+         color: #999;
+         font-style: italic;
+     }
+</style>
+</html>

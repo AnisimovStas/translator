@@ -4,6 +4,8 @@ import org.example.model.Word;
 import org.example.utils.DatabaseUtils;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WordRepository {
 
@@ -86,4 +88,24 @@ Word getWordByOriginalText = getWordByOriginalText(word.getOriginalText());
                 """, id);
     }
 
+    public List<Word> getAllWords() {
+        ResultSet resultSet = DatabaseUtils.executeQuery("""
+                select * from word
+                """);
+        List<Word> words = new ArrayList<>();
+        try {
+            while (resultSet != null && resultSet.next()) {
+                Word word = new Word();
+                word.setId(resultSet.getInt("id"));
+                word.setOriginalText(resultSet.getString("original_text"));
+                word.setTranslatedText(resultSet.getString("translated_text"));
+                word.setShown(resultSet.getBoolean("is_shown"));
+                words.add(word);
+            }
+            return words;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

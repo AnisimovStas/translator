@@ -63,6 +63,7 @@ public class Server {
 
         app.post("/words", ctx -> {
             ObjectMapper objectMapper = new ObjectMapper();
+            System.out.println("fetching unshown words");
             try {
                 Word unshownWord = wordRepository.getUnshown();
                 if(unshownWord == null) {
@@ -76,6 +77,15 @@ public class Server {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        });
+
+        app.post("/translate/search", ctx -> {
+            String requestBody = ctx.body();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+                List<Word> words = wordRepository.getAllWords();
+                String json = objectMapper.writeValueAsString(words);
+                ctx.result(json);
         });
 
     }

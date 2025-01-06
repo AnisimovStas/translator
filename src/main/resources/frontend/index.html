@@ -1,55 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My PWA</title>
+        <title>Переводчик</title>
         <link rel="manifest" href="manifest.json">
-    </head>
-
+        <link rel="stylesheet" href="common.css">
 </head>
 <body>
-<div>это интекс gtml!</div>
-<button id="notifications"> Показать уведомление</button>
+<div id="no-permission" class="no-permission">
+    <h1> Нажмите на кнопку, чтобы разрешить отправку уведомлений     </h1>
+    <button id="notifications" class="button"> Разрешить отпавку уведомлений</button>
+</div>
+<div class="container">
+    <header>
+        <div class="button-container">
+            <button id="dictionary">Словарь</button>
+            <button disabled>Экзамен</button>
+        </div>
+    </header>
+    <main class="main">
+        <div class="bordered">
+    <h1>Ура! Все работает!</h1>
+    <p>Для того чтобы воспользоваться переводом, выделите слово и нажмите сочетание клавиш</p>
+            <code class="code">ctrl + c + shift</code>
+            <p> (Именно в такой последовательности)</p>
+        </div>
+    </main>
+</div>
+
 
 <script>
-    // Проверка, поддерживает ли браузер Background Sync
- if ('serviceWorker' in navigator) {
-   window.addEventListener('load', () => {
-     navigator.serviceWorker.register('./service-worker.js')
-       .then((registration) => {
-         console.log('Service Worker зарегистрирован с областью:', registration.scope);
+    document.getElementById("dictionary").addEventListener("click", () => {
+        window.location.href = "dictionary.html";});
 
-         // После регистрации сервис-воркера, запускаем Background Sync
-         registerSync();
-       })
-       .catch((error) => {
-         console.log('Ошибка регистрации сервис-воркера:', error);
-       });
-   });
- }
 
- // Функция для регистрации синхронизации
- function registerSync() {
-     navigator.serviceWorker.ready.then(swRegistration => {
-         return swRegistration.sync.register('fetch-data');
-     }).catch(err => {
-         console.error('Ошибка регистрации синхронизации:', err);
-     });
- }
 
- // Обработчик кнопки для запросов уведомлений
- const button = document.getElementById("notifications");
- button.addEventListener("click", () => {
-     Notification.requestPermission().then((result) => {
-         if (result === "granted") {
-             // Запускаем синхронизацию только при разрешении на уведомления
-             registerSync();
-         }
-     });
- });
+    // SERVICE WORKER LOGIC
+    // Обработчик кнопки для запросов уведомлений
+    const button = document.getElementById("notifications");
+    button.addEventListener("click", () => {
+        Notification.requestPermission().then((result) => {
+            if (result === "granted") {
+                // Запускаем синхронизацию только при разрешении на уведомления
+                registerSync();
+            }
+        });
+    });
 
+    // Функция для регистрации синхронизации
+    function registerSync() {
+        navigator.serviceWorker.ready.then(swRegistration => {
+            return swRegistration.sync.register('fetch-data');
+        }).catch(err => {
+            console.error('Ошибка регистрации синхронизации:', err);
+        });
+    }
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker зарегистрирован с областью:', registration.scope);
+
+                    // После регистрации сервис-воркера, запускаем Background Sync
+                    // Регистрация синхронизации, если разрешение на уведомления уже дано
+                    if (Notification.permission === 'granted') {
+                        registerSync();
+                    }
+
+                    document.getElementById("no-permission").style.display = "none";
+                })
+                .catch((error) => {
+                    console.log('Ошибка регистрации сервис-воркера:', error);
+                });
+        });
+    }
 </script>
+
 </body>
+<style>
+.bordered {
+    border: 1px solid black;
+   height: 300px;
+    width: 500px;
+    padding: 10px;
+    gap: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    text-align:center;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    }
+</style>
 </html>
